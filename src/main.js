@@ -1,110 +1,126 @@
-import Tracker from './Tracker';
-import Mouse from './Mouse';
-import Tile from './Tile';
 import theme from './theme';
-import getMap from './getMap';
 import renderer from './renderer';
-import pathfinder from './pathfinder';
+import Mouse from './Mouse';
+import Hexagon from './Hexagon';
+import hexagonUtils from './utils/hexagon';
+import Map from './Map';
+
+const dpr = renderer.dpr;
+const mouse = new Mouse();
+const hexagonSize = 20;
+let initialized = false;
 
 document.body.style.backgroundColor = theme.backgroundColor;
 
-const map = getMap();
-const tracker = new Tracker();
-const mouse = new Mouse();
-
-let initialized = false;
-let currentTileSize = 1;
-let currentPath = null;
-
 renderer.setElement(document.getElementById('canvas'));
-renderer.setMap(map);
 
-renderer.keepSizeToWindow((tileSize) => {
-  currentTileSize = tileSize;
-
-  tracker.radius = tileSize / 5;
-
+renderer.keepSizeToWindow(() => {
   render();
 });
 
-mouse.setMoveHandler((x, y) => {
-  update();
-});
-
-function update() {
-  const trackerCol = Math.floor(tracker.x / currentTileSize);
-  const trackerRow = Math.floor(tracker.y / currentTileSize);
-  const mouseX = renderer.convertToViewCoords('x', mouse.x);
-  const mouseY = renderer.convertToViewCoords('y', mouse.y);
-  const mouseCol = Math.floor(mouseX / currentTileSize);
-  const mouseRow = Math.floor(mouseY / currentTileSize);
-  const mouseWithinX = mouseCol >= 0 && mouseCol < map.cols;
-  const mouseWithinY = mouseRow >= 0 && mouseRow < map.rows;
-
-  if (!mouseWithinX || !mouseWithinY) {
-    currentPath = null;
-    return;
-  }
-
-  const start = new Tile(trackerRow, trackerCol);
-  const end = new Tile(mouseRow, mouseCol);
-
-  currentPath = pathfinder.findPath(map, start, end);
+function createHexagon(column, row) {
+  const {x, y} = hexagonUtils.hexToPosition({column, row}, hexagonSize);
+  return new Hexagon({
+    x: x,
+    y: y,
+    size: dpr(hexagonSize)
+  });
 }
 
-function moveTracker() {
-  if (!currentPath) return;
-
-  const differentPath = tracker.trackingPath !== currentPath;
-
-  if (differentPath) {
-    currentPath.removeFirstIndex();
-  }
-
-  if (currentPath.hasReachedEnd()) return;
-
-  const nextIndex = currentPath.getFirstIndex();
-  const nextTileCol = nextIndex % map.cols;
-  const nextTileRow = Math.floor(nextIndex / map.cols);
-  const nextTileX = nextTileCol * currentTileSize + currentTileSize / 2;
-  const nextTileY = nextTileRow * currentTileSize + currentTileSize / 2;
-
-  if (differentPath || !tracker.incrementX || !tracker.incrementY) {
-    const diffX = nextTileX - tracker.x;
-    const diffY = nextTileY - tracker.y;
-    const diffDiag = Math.sqrt(diffX * diffX + diffY * diffY);
-    const steps = diffDiag / tracker.speed;
-    const stepDiffX = diffX / steps;
-    const stepDiffY = diffY / steps;
-
-    tracker.incrementX = stepDiffX;
-    tracker.incrementY = stepDiffY;
-    tracker.trackingPath = currentPath;
-  }
-
-  const {incrementX, incrementY, x, y} = tracker;
-
-  tracker.x += incrementX;
-  tracker.y += incrementY;
-
-  const hasReachedX = incrementX > 0 ? (nextTileX <= x) : (nextTileX >= x);
-  const hasReachedY = incrementY > 0 ? (nextTileY <= y) : (nextTileY >= y);
-
-  if (hasReachedX && hasReachedY) {
-    currentPath.removeFirstIndex();
-    tracker.incrementX = 0;
-    tracker.incrementY = 0;
-  }
+function addHexagon(map, column, row) {
+  map.setTile(column, row, createHexagon(column, row));
 }
+
+const map = new Map();
+
+addHexagon(map, 0, 0);
+addHexagon(map, 0, 1);
+addHexagon(map, 0, 2);
+addHexagon(map, 1, 0);
+addHexagon(map, 1, 1);
+addHexagon(map, 2, 1);
+addHexagon(map, 3, 0);
+addHexagon(map, 4, 0);
+addHexagon(map, 5, -1);
+addHexagon(map, 6, -1);
+addHexagon(map, 7, -2);
+addHexagon(map, 7, -3);
+addHexagon(map, 8, -4);
+addHexagon(map, 8, -3);
+addHexagon(map, 8, -2);
+addHexagon(map, 2, 2);
+addHexagon(map, 3, 1);
+addHexagon(map, 4, 1);
+addHexagon(map, 5, 0);
+addHexagon(map, 6, 0);
+addHexagon(map, 1, 3);
+addHexagon(map, 2, 3);
+addHexagon(map, 3, 2);
+addHexagon(map, 4, 2);
+addHexagon(map, 5, 1);
+addHexagon(map, 6, 1);
+addHexagon(map, 7, 0);
+addHexagon(map, 0, 4);
+addHexagon(map, 1, 4);
+addHexagon(map, 2, 4);
+addHexagon(map, 3, 3);
+addHexagon(map, 4, 3);
+addHexagon(map, 5, 2);
+addHexagon(map, 6, 2);
+addHexagon(map, 7, 1);
+addHexagon(map, 8, 0);
+addHexagon(map, 0, 5);
+addHexagon(map, 1, 5);
+addHexagon(map, 2, 4);
+addHexagon(map, 3, 4);
+addHexagon(map, 4, 3);
+addHexagon(map, 5, 3);
+addHexagon(map, 6, 2);
+addHexagon(map, 7, 2);
+addHexagon(map, 8, 1);
+addHexagon(map, 0, 6);
+addHexagon(map, 1, 6);
+addHexagon(map, 2, 5);
+addHexagon(map, 3, 5);
+addHexagon(map, 4, 4);
+addHexagon(map, 5, 4);
+addHexagon(map, 6, 3);
+addHexagon(map, 7, 3);
+addHexagon(map, 8, 2);
+addHexagon(map, 0, 7);
+addHexagon(map, 1, 7);
+addHexagon(map, 2, 6);
+addHexagon(map, 3, 6);
+addHexagon(map, 4, 5);
+addHexagon(map, 5, 5);
+addHexagon(map, 6, 4);
+addHexagon(map, 7, 4);
+addHexagon(map, 8, 3);
 
 function render() {
   if (!initialized) return;
 
-  moveTracker();
+  const context = renderer.getContext();
+  const dpr = renderer.dpr;
 
   renderer.clear();
-  renderer.renderMap(currentPath);
-  renderer.renderTracker(tracker);
+
+  const edgeOffset = 100;
+
+  context.save();
+  context.translate(dpr(edgeOffset), dpr(edgeOffset));
+
+  const mouseHex = hexagonUtils.positionToHex(
+    {x: mouse.x - edgeOffset, y: mouse.y - edgeOffset}, hexagonSize
+  );
+
+  map.forEach((tile, column, row) => {
+    const isMouseColumn = column === mouseHex.column;
+    const isMouseRow = row === mouseHex.row
+    tile.render(context, dpr, isMouseColumn && isMouseRow);
+  });
+
+  context.restore();
 }
 
 function tick() {
