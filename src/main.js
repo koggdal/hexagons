@@ -2,12 +2,14 @@ import theme from './theme';
 import renderer from './renderer';
 import Mouse from './Mouse';
 import Hexagon from './Hexagon';
+import Item from './Item';
 import hexagonUtils from './utils/hexagon';
 import Map from './Map';
 
 const dpr = renderer.dpr;
 const mouse = new Mouse();
-const hexagonSize = 20;
+const hexagonSize = theme.hexagonSize;
+const edgeOffset = 100;
 let initialized = false;
 
 document.body.style.backgroundColor = theme.backgroundColor;
@@ -18,9 +20,19 @@ renderer.keepSizeToWindow(() => {
   render();
 });
 
+mouse.setMoveHandler((x, y) => {
+  const mouseHex = hexagonUtils.positionToHex(
+    {x: mouse.x - edgeOffset, y: mouse.y - edgeOffset}, hexagonSize
+  );
+
+  document.title = mouseHex.column + ' : ' + mouseHex.row;
+});
+
 function createHexagon(column, row) {
   const {x, y} = hexagonUtils.hexToPosition({column, row}, hexagonSize);
   return new Hexagon({
+    column: column,
+    row: row,
     x: x,
     y: y,
     size: dpr(hexagonSize)
@@ -29,6 +41,14 @@ function createHexagon(column, row) {
 
 function addHexagon(map, column, row) {
   map.setTile(column, row, createHexagon(column, row));
+}
+
+function createItem(hex) {
+  return new Item();
+}
+
+function addItem(map, column, row) {
+  map.setItemAtTile(column, row, createItem());
 }
 
 const map = new Map();
@@ -56,16 +76,16 @@ addHexagon(map, 6, 0);
 addHexagon(map, 1, 3);
 addHexagon(map, 2, 3);
 addHexagon(map, 3, 2);
-addHexagon(map, 4, 2);
+// addHexagon(map, 4, 2);
 addHexagon(map, 5, 1);
 addHexagon(map, 6, 1);
 addHexagon(map, 7, 0);
 addHexagon(map, 0, 4);
 addHexagon(map, 1, 4);
 addHexagon(map, 2, 4);
-addHexagon(map, 3, 3);
-addHexagon(map, 4, 3);
-addHexagon(map, 5, 2);
+// addHexagon(map, 3, 3);
+// addHexagon(map, 4, 3);
+// addHexagon(map, 5, 2);
 addHexagon(map, 6, 2);
 addHexagon(map, 7, 1);
 addHexagon(map, 8, 0);
@@ -73,16 +93,14 @@ addHexagon(map, 0, 5);
 addHexagon(map, 1, 5);
 addHexagon(map, 2, 4);
 addHexagon(map, 3, 4);
-addHexagon(map, 4, 3);
 addHexagon(map, 5, 3);
-addHexagon(map, 6, 2);
 addHexagon(map, 7, 2);
 addHexagon(map, 8, 1);
 addHexagon(map, 0, 6);
 addHexagon(map, 1, 6);
 addHexagon(map, 2, 5);
 addHexagon(map, 3, 5);
-addHexagon(map, 4, 4);
+// addHexagon(map, 4, 4);
 addHexagon(map, 5, 4);
 addHexagon(map, 6, 3);
 addHexagon(map, 7, 3);
@@ -97,6 +115,22 @@ addHexagon(map, 6, 4);
 addHexagon(map, 7, 4);
 addHexagon(map, 8, 3);
 
+addItem(map, 0, 0);
+addItem(map, 1, 0);
+addItem(map, 2, 1);
+addItem(map, 3, 0);
+addItem(map, 4, 0);
+addItem(map, 5, -1);
+addItem(map, 6, -1);
+addItem(map, 7, -3);
+addItem(map, 8, -4);
+
+addItem(map, 2, 5);
+
+setTimeout(() => {
+  map.fall();
+}, 1000);
+
 function render() {
   if (!initialized) return;
 
@@ -104,8 +138,6 @@ function render() {
   const dpr = renderer.dpr;
 
   renderer.clear();
-
-  const edgeOffset = 100;
 
   context.save();
   context.translate(dpr(edgeOffset), dpr(edgeOffset));
@@ -118,6 +150,10 @@ function render() {
     const isMouseColumn = column === mouseHex.column;
     const isMouseRow = row === mouseHex.row
     tile.render(context, dpr, isMouseColumn && isMouseRow);
+
+    if (tile.item) {
+      tile.item.render(context, dpr);
+    }
   });
 
   context.restore();

@@ -1,3 +1,4 @@
 export default {
-  backgroundColor: '#181818'
+  backgroundColor: '#181818',
+  hexagonSize: 20
 };

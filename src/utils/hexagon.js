@@ -41,11 +41,47 @@ function positionToHex(pos, hexagonSize) {
   });
 }
 
+function hexToPositionX(hex, hexagonSize) {
+  return dpr(hexagonSize * 3/2 * hex.column);
+}
+
+function hexToPositionY(hex, hexagonSize) {
+  return dpr(hexagonSize * Math.sqrt(3) * (hex.row + hex.column / 2));
+}
+
 function hexToPosition(hex, hexagonSize) {
   return {
-    x: dpr(hexagonSize * 3/2 * hex.column),
-    y: dpr(hexagonSize * Math.sqrt(3) * (hex.row + hex.column / 2))
+    x: hexToPositionX(hex, hexagonSize),
+    y: hexToPositionY(hex, hexagonSize)
   };
+}
+
+function adjacentHex(hex, direction) {
+  switch (direction) {
+
+  case 'up-left':
+    return {column: hex.column - 1, row: hex.row - 0};
+  
+  case 'up':
+    return {column: hex.column, row: hex.row - 1};
+  
+  case 'up-right':
+    return {column: hex.column + 1, row: hex.row - 1};
+  
+  case 'down-right':
+    return {column: hex.column + 1, row: hex.row};
+  
+  case 'down':
+    return {column: hex.column, row: hex.row + 1};
+  
+  case 'down-left':
+    return {column: hex.column - 1, row: hex.row + 1};
+
+  }
+}
+
+function isSameHex(a, b) {
+  return a.column === b.column && a.row === b.row;
 }
 
 export default {
@@ -54,5 +90,9 @@ export default {
   cubeRound,
   hexRound,
   positionToHex,
-  hexToPosition
+  hexToPosition,
+  hexToPositionX,
+  hexToPositionY,
+  adjacentHex,
+  isSameHex
 }

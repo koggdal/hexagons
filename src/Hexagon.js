@@ -3,7 +3,24 @@ export default class Hexagon {
   constructor(options = {}) {
     this.x = options.x || 0;
     this.y = options.y || 0;
+    this.column = options.column || 0;
+    this.row = options.row || 0;
     this.size = options.size || 0;
+    this.item = null;
+  }
+
+  setItem(item) {
+    this.item = item;
+    item.x = this.x;
+    item.y = this.y;
+    item.tile = this;
+  }
+
+  removeItem() {
+    if (this.item) {
+      this.item.tile = null;
+      this.item = null;
+    }
   }
 
   cornerAngle(i) {
@@ -34,6 +51,9 @@ export default class Hexagon {
 
     if (useFill) {
       context.fillStyle = 'red';
+      context.fill();
+    } else {
+      context.fillStyle = '#300';
       context.fill();
     }
   }
